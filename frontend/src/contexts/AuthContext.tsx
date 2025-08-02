@@ -43,17 +43,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Set up axios interceptor to include token in requests
-  useEffect(() => {
-    const storedToken = localStorage.getItem('confessly_token');
-    if (storedToken) {
-      setToken(storedToken);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
-      fetchUserProfile(storedToken);
-    } else {
-      setLoading(false);
-    }
-  }, [fetchUserProfile]);
+  const logout = useCallback(() => {
+    localStorage.removeItem('confessly_token');
+    setToken(null);
+    setUser(null);
+    delete axios.defaults.headers.common['Authorization'];
+  }, []);
 
   const fetchUserProfile = useCallback(async (authToken: string) => {
     try {
@@ -68,6 +63,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(false);
     }
   }, [logout]);
+
+  // Set up axios interceptor to include token in requests
+  useEffect(() => {
+    const storedToken = localStorage.getItem('confessly_token');
+    if (storedToken) {
+      setToken(storedToken);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+      fetchUserProfile(storedToken);
+    } else {
+      setLoading(false);
+    }
+  }, [fetchUserProfile]);
 
   const login = async (email: string, password: string) => {
     try {
@@ -113,13 +120,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       throw new Error(error.response?.data?.error || 'Registration failed');
     }
   };
-
-  const logout = useCallback(() => {
-    localStorage.removeItem('confessly_token');
-    setToken(null);
-    setUser(null);
-    delete axios.defaults.headers.common['Authorization'];
-  }, []);
 
   const updateUser = (userData: Partial<User>) => {
     if (user) {
