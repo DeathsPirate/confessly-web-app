@@ -1,0 +1,1316 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Confessly API",
+    "description": "Anonymous confession web application with AI assistant, karma system, and moderation tools.\n\n## Features\n- Anonymous confession posting with voting system\n- AI assistant responses (Confessor Bot 🤖)\n- Karma-based moderation system (100+ karma = moderator)\n- Content flagging and moderation queue\n- User authentication with JWT tokens\n- Complete data export functionality\n\n## Authentication\nMost endpoints require JWT authentication. Include the token in the Authorization header:\n```\nAuthorization: Bearer <your-jwt-token>\n```\n\n## Test Accounts\n- **Regular User**: alice@example.com / password123 (4 karma)\n- **Moderator**: moderator@example.com / password123 (150 karma)\n",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Confessly API Support",
+      "url": "https://github.com/DeathsPirate/confessly-web-app"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3001/api",
+      "description": "Local development server"
+    },
+    {
+      "url": "https://confessly-backend-production.up.railway.app/api",
+      "description": "Production server (Railway)"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Health",
+      "description": "System health and status"
+    },
+    {
+      "name": "Authentication",
+      "description": "User registration and login"
+    },
+    {
+      "name": "User Profile",
+      "description": "User profile management"
+    },
+    {
+      "name": "Confessions",
+      "description": "Anonymous confession management"
+    },
+    {
+      "name": "Voting",
+      "description": "Upvote and downvote system"
+    },
+    {
+      "name": "Comments",
+      "description": "Anonymous commenting system"
+    },
+    {
+      "name": "Flagging",
+      "description": "Content reporting and flagging"
+    },
+    {
+      "name": "Moderation",
+      "description": "Content moderation tools (100+ karma required)"
+    },
+    {
+      "name": "AI Assistant",
+      "description": "AI-powered response system"
+    },
+    {
+      "name": "Data Export",
+      "description": "User data export functionality"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Health check endpoint",
+        "description": "Returns the current status and timestamp of the API",
+        "responses": {
+          "200": {
+            "description": "API is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "OK"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-08-02T13:12:34.448Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Register a new user",
+        "description": "Create a new user account with email, password, and handle",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "password",
+                  "handle"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "user@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 6,
+                    "example": "password123"
+                  },
+                  "handle": {
+                    "type": "string",
+                    "minLength": 3,
+                    "example": "cool_user"
+                  },
+                  "bio": {
+                    "type": "string",
+                    "example": "Just someone who likes to share thoughts"
+                  },
+                  "favoriteSnack": {
+                    "type": "string",
+                    "example": "Chocolate chip cookies"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or user already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "User login",
+        "description": "Authenticate user and receive JWT token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "alice@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "password123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Account is suspended",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/profile": {
+      "get": {
+        "tags": [
+          "User Profile"
+        ],
+        "summary": "Get user profile",
+        "description": "Retrieve the authenticated user's profile information",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfile"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/confessions": {
+      "get": {
+        "tags": [
+          "Confessions"
+        ],
+        "summary": "Get confession feed",
+        "description": "Retrieve a paginated list of confessions (anonymous)",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number (starts at 1)",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of confessions per page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Confessions retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "confessions": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Confession"
+                      }
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "limit": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Confessions"
+        ],
+        "summary": "Create a confession",
+        "description": "Post an anonymous confession with optional metadata",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "content"
+                ],
+                "properties": {
+                  "content": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "example": "I secretly love pineapple on pizza and I'm tired of pretending I don't."
+                  },
+                  "mood": {
+                    "type": "string",
+                    "enum": [
+                      "Guilty",
+                      "Regretful",
+                      "Hopeful",
+                      "Anxious",
+                      "Frustrated",
+                      "Embarrassed",
+                      "Relieved",
+                      "Confused",
+                      "Proud",
+                      "Ashamed"
+                    ],
+                    "example": "Guilty"
+                  },
+                  "location": {
+                    "type": "string",
+                    "example": "Kitchen"
+                  },
+                  "taggedUsers": {
+                    "type": "string",
+                    "example": "@pizza_lovers @food_critics"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Confession posted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Confession posted successfully"
+                    },
+                    "confession": {
+                      "$ref": "#/components/schemas/ConfessionResponse"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/confessions/{id}/vote": {
+      "post": {
+        "tags": [
+          "Voting"
+        ],
+        "summary": "Vote on a confession",
+        "description": "Upvote or downvote a confession (affects author's karma)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Confession ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "voteType"
+                ],
+                "properties": {
+                  "voteType": {
+                    "type": "string",
+                    "enum": [
+                      "upvote",
+                      "downvote"
+                    ],
+                    "example": "upvote"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Vote recorded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Vote recorded successfully"
+                    },
+                    "voteResult": {
+                      "type": "object",
+                      "properties": {
+                        "action": {
+                          "type": "string",
+                          "enum": [
+                            "added",
+                            "removed",
+                            "changed"
+                          ],
+                          "example": "added"
+                        },
+                        "voteType": {
+                          "type": "string",
+                          "example": "upvote"
+                        }
+                      }
+                    },
+                    "confession": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer"
+                        },
+                        "upvotes": {
+                          "type": "integer"
+                        },
+                        "downvotes": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid vote type",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Confession not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/confessions/{id}/comments": {
+      "get": {
+        "tags": [
+          "Comments"
+        ],
+        "summary": "Get confession comments",
+        "description": "Retrieve all comments for a specific confession (including AI responses)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Confession ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Comments retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "comments": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Comment"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Comments"
+        ],
+        "summary": "Add a comment",
+        "description": "Post an anonymous comment on a confession",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Confession ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "content"
+                ],
+                "properties": {
+                  "content": {
+                    "type": "string",
+                    "maxLength": 300,
+                    "example": "I totally understand this feeling!"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Comment posted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Comment posted successfully"
+                    },
+                    "comment": {
+                      "$ref": "#/components/schemas/Comment"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Confession not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/flag": {
+      "post": {
+        "tags": [
+          "Flagging"
+        ],
+        "summary": "Flag content",
+        "description": "Report a confession or comment for moderation review",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "contentType",
+                  "contentId"
+                ],
+                "properties": {
+                  "contentType": {
+                    "type": "string",
+                    "enum": [
+                      "confession",
+                      "comment"
+                    ],
+                    "example": "confession"
+                  },
+                  "contentId": {
+                    "type": "integer",
+                    "example": 123
+                  },
+                  "reason": {
+                    "type": "string",
+                    "example": "Inappropriate content"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Content flagged successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Content flagged successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/moderation/flagged": {
+      "get": {
+        "tags": [
+          "Moderation"
+        ],
+        "summary": "Get flagged content queue",
+        "description": "Retrieve all flagged content for moderator review (requires 100+ karma)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Flagged content retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "flaggedContent": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FlaggedContent"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Moderator privileges required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/moderation/{contentType}/{id}": {
+      "delete": {
+        "tags": [
+          "Moderation"
+        ],
+        "summary": "Delete flagged content",
+        "description": "Remove a flagged confession or comment (requires 100+ karma)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "contentType",
+            "in": "path",
+            "required": true,
+            "description": "Type of content to delete",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "confession",
+                "comment"
+              ]
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Content ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Content deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "confession deleted successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid content type",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Moderator privileges required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ai/process-confession/{id}": {
+      "post": {
+        "tags": [
+          "AI Assistant"
+        ],
+        "summary": "Trigger AI response for confession",
+        "description": "Manually trigger the AI assistant to respond to a specific confession (requires moderator)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Confession ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "AI processing completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "AI response generated"
+                    },
+                    "response": {
+                      "$ref": "#/components/schemas/Comment"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Moderator privileges required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Confession not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ai/process-all": {
+      "post": {
+        "tags": [
+          "AI Assistant"
+        ],
+        "summary": "Trigger AI responses for recent confessions",
+        "description": "Have the AI assistant review and respond to recent confessions (requires moderator)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "AI batch processing completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "AI generated 5 responses"
+                    },
+                    "responses": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Comment"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Moderator privileges required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/export": {
+      "get": {
+        "tags": [
+          "Data Export"
+        ],
+        "summary": "Export user data",
+        "description": "Download all user data including confessions, comments, and profile information",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User data exported successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "exported_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "user_data": {
+                      "$ref": "#/components/schemas/UserDataExport"
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Content-Disposition": {
+                "description": "Attachment filename",
+                "schema": {
+                  "type": "string",
+                  "example": "attachment; filename=\"confessly-data-123-1234567890.json\""
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT token obtained from login endpoint"
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Error message description"
+          }
+        }
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Login successful"
+          },
+          "token": {
+            "type": "string",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "email": {
+            "type": "string",
+            "example": "alice@example.com"
+          },
+          "handle": {
+            "type": "string",
+            "example": "alice_wonder"
+          },
+          "bio": {
+            "type": "string",
+            "example": "Just a curious soul exploring life."
+          },
+          "favorite_snack": {
+            "type": "string",
+            "example": "Chocolate cookies"
+          },
+          "karma": {
+            "type": "integer",
+            "example": 4
+          }
+        }
+      },
+      "UserProfile": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/User"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "isModerator": {
+                "type": "boolean",
+                "example": false
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2025-08-02T13:08:53Z"
+              }
+            }
+          }
+        ]
+      },
+      "Confession": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "content": {
+            "type": "string",
+            "example": "I secretly love pineapple on pizza and I'm tired of pretending I don't."
+          },
+          "mood": {
+            "type": "string",
+            "example": "Guilty"
+          },
+          "location": {
+            "type": "string",
+            "example": "Kitchen"
+          },
+          "tagged_users": {
+            "type": "string",
+            "example": "@pizza_lovers"
+          },
+          "upvotes": {
+            "type": "integer",
+            "example": 3
+          },
+          "downvotes": {
+            "type": "integer",
+            "example": 0
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-08-02T13:08:53Z"
+          },
+          "author_handle": {
+            "type": "string",
+            "example": "anonymous"
+          }
+        }
+      },
+      "ConfessionResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 10
+          },
+          "content": {
+            "type": "string",
+            "example": "This is my confession content"
+          },
+          "mood": {
+            "type": "string",
+            "example": "Hopeful"
+          },
+          "location": {
+            "type": "string",
+            "example": "Home"
+          },
+          "taggedUsers": {
+            "type": "string",
+            "example": "@friends"
+          },
+          "upvotes": {
+            "type": "integer",
+            "example": 0
+          },
+          "downvotes": {
+            "type": "integer",
+            "example": 0
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-08-02T13:14:08.487Z"
+          }
+        }
+      },
+      "Comment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "content": {
+            "type": "string",
+            "example": "I totally understand this feeling!"
+          },
+          "author_handle": {
+            "type": "string",
+            "example": "anonymous",
+            "description": "Shows 'Confessor Bot 🤖' for AI responses, 'anonymous' for users"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-08-02T13:20:26Z"
+          }
+        }
+      },
+      "FlaggedContent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "confession",
+              "comment"
+            ],
+            "example": "confession"
+          },
+          "content": {
+            "type": "string",
+            "example": "This is the flagged content"
+          },
+          "author_handle": {
+            "type": "string",
+            "example": "anonymous"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-08-02T13:08:53Z"
+          },
+          "flag_reasons": {
+            "type": "string",
+            "example": "Inappropriate content,Spam",
+            "description": "Comma-separated list of flag reasons"
+          }
+        }
+      },
+      "UserDataExport": {
+        "type": "object",
+        "properties": {
+          "profile": {
+            "$ref": "#/components/schemas/User"
+          },
+          "confessions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "content": {
+                  "type": "string"
+                },
+                "mood": {
+                  "type": "string"
+                },
+                "location": {
+                  "type": "string"
+                },
+                "tagged_users": {
+                  "type": "string"
+                },
+                "upvotes": {
+                  "type": "integer"
+                },
+                "downvotes": {
+                  "type": "integer"
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          },
+          "comments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "content": {
+                  "type": "string"
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "confession_content": {
+                  "type": "string",
+                  "description": "Content of the confession this comment was made on"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

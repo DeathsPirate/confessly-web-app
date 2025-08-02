@@ -39,6 +39,16 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
   customSiteTitle: 'Confessly API Documentation'
 }));
 
+// OpenAPI JSON endpoints
+app.get('/api/openapi.json', (req, res) => {
+  res.json(swaggerDocument);
+});
+
+// Alternative endpoint for OpenAPI spec
+app.get('/openapi.json', (req, res) => {
+  res.json(swaggerDocument);
+});
+
 // Auth middleware
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
