@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import axios from 'axios';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
@@ -53,9 +53,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } else {
       setLoading(false);
     }
-  }, []);
+  }, [fetchUserProfile]);
 
-  const fetchUserProfile = async (authToken: string) => {
+  const fetchUserProfile = useCallback(async (authToken: string) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/user/profile`, {
         headers: { Authorization: `Bearer ${authToken}` }
@@ -67,7 +67,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [logout]);
 
   const login = async (email: string, password: string) => {
     try {
@@ -114,12 +114,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('confessly_token');
     setToken(null);
     setUser(null);
     delete axios.defaults.headers.common['Authorization'];
-  };
+  }, []);
 
   const updateUser = (userData: Partial<User>) => {
     if (user) {

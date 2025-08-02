@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ChevronUp, ChevronDown, MessageCircle, Flag } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
@@ -42,9 +42,9 @@ const ConfessionCard: React.FC<ConfessionCardProps> = ({ confession, onVoteUpdat
     if (showComments && !commentsLoaded) {
       loadComments();
     }
-  }, [showComments, commentsLoaded]);
+  }, [showComments, commentsLoaded, loadComments]);
 
-  const loadComments = async () => {
+  const loadComments = useCallback(async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/confessions/${confession.id}/comments`);
       setComments(response.data.comments);
@@ -52,7 +52,7 @@ const ConfessionCard: React.FC<ConfessionCardProps> = ({ confession, onVoteUpdat
     } catch (error) {
       console.error('Failed to load comments:', error);
     }
-  };
+  }, [confession.id]);
 
   const handleVote = async (voteType: 'upvote' | 'downvote') => {
     if (!user) return;
