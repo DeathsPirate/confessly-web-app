@@ -6,7 +6,7 @@ info:
     
     ## Features
     - Anonymous confession posting with voting system
-    - AI assistant responses (Confessor Bot 🤖)
+    - **Real AI assistant responses** (Confessor Bot 🤖 powered by OpenAI GPT-3.5)
     - Karma-based moderation system (100+ karma = moderator)
     - Content flagging and moderation queue
     - User authentication with JWT tokens

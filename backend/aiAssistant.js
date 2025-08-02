@@ -1,10 +1,22 @@
 const { dbHelpers } = require('./database');
+const OpenAI = require('openai');
 
 // AI Assistant that responds to confessions with advice
 class AIAssistant {
   constructor() {
     this.name = "Confessor Bot";
     this.responseRate = 0.3; // 30% chance to respond to any confession
+    
+    // Initialize OpenAI client if API key is available
+    this.openai = null;
+    if (process.env.OPENAI_API_KEY) {
+      this.openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+      });
+      console.log('🤖 AI Assistant: OpenAI integration enabled');
+    } else {
+      console.log('🤖 AI Assistant: Using rule-based responses (set OPENAI_API_KEY for real AI)');
+    }
   }
 
   // Rule-based responses based on mood and content keywords
@@ -146,7 +158,7 @@ class AIAssistant {
         return null;
       }
 
-      const response = this.generateResponse(confession);
+      const response = await this.generateAIResponse(confession);
       
       // Create AI response as a comment
       const aiComment = await dbHelpers.createComment(
@@ -175,22 +187,46 @@ class AIAssistant {
     return responses;
   }
 
-  // Advanced AI integration placeholder (for future OpenAI/Claude integration)
-  async generateAIResponse(confession, aiService = null) {
-    if (aiService === 'openai') {
-      // Placeholder for OpenAI integration
-      // const response = await openai.createCompletion({
-      //   model: "gpt-3.5-turbo",
-      //   messages: [{
-      //     role: "system",
-      //     content: "You are a supportive AI assistant responding to anonymous confessions. Provide empathetic, helpful advice in 1-2 sentences."
-      //   }, {
-      //     role: "user", 
-      //     content: confession.content
-      //   }],
-      //   max_tokens: 100
-      // });
-      // return response.data.choices[0].message.content;
+  // Generate AI response using OpenAI or fallback to rule-based
+  async generateAIResponse(confession) {
+    // Use real AI if OpenAI is configured
+    if (this.openai) {
+      try {
+        const response = await this.openai.chat.completions.create({
+          model: "gpt-3.5-turbo",
+          messages: [{
+            role: "system",
+            content: `You are Confessor Bot, a supportive AI assistant responding to anonymous confessions on a platform called Confessly. Your role is to provide empathetic, non-judgmental, and helpful advice.
+
+Guidelines:
+- Keep responses to 1-2 sentences (under 200 characters)
+- Be warm, understanding, and supportive
+- Avoid being preachy or overly clinical
+- Use encouraging emojis sparingly but meaningfully
+- Focus on growth, self-compassion, and positive action
+- Never reveal that this is an anonymous confession platform
+- Address the person directly as "you"
+
+The confession's mood is: ${confession.mood || 'not specified'}
+Location context: ${confession.location || 'not specified'}`
+          }, {
+            role: "user", 
+            content: confession.content
+          }],
+          max_tokens: 80,
+          temperature: 0.7,
+          presence_penalty: 0.2,
+          frequency_penalty: 0.1
+        });
+        
+        console.log('🤖 AI Assistant: Generated OpenAI response');
+        return response.choices[0].message.content.trim();
+        
+      } catch (error) {
+        console.error('🤖 AI Assistant: OpenAI error, falling back to rule-based:', error.message);
+        // Fall back to rule-based on API error
+        return this.generateResponse(confession);
+      }
     }
     
     // Fall back to rule-based system
