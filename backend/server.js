@@ -100,6 +100,43 @@ app.get('/api/ai/status', (req, res) => {
   });
 });
 
+// Test endpoint to trigger AI response on latest confession
+app.post('/api/ai/test-response', async (req, res) => {
+  try {
+    const confessions = await dbHelpers.getConfessions(1, 0);
+    if (confessions.length === 0) {
+      return res.status(404).json({ error: 'No confessions found' });
+    }
+    
+    const confession = confessions[0];
+    console.log('🧪 Test AI response triggered for confession:', confession.id);
+    
+    const aiResponse = await aiAssistant.processConfession({
+      id: confession.id,
+      content: confession.content,
+      mood: confession.mood,
+      location: confession.location,
+      tagged_users: confession.tagged_users
+    });
+    
+    if (aiResponse) {
+      res.json({ 
+        message: 'AI response generated successfully',
+        confession: { id: confession.id, content: confession.content },
+        response: aiResponse 
+      });
+    } else {
+      res.json({ 
+        message: 'AI chose not to respond to this confession',
+        confession: { id: confession.id, content: confession.content }
+      });
+    }
+  } catch (error) {
+    console.error('Test AI response error:', error);
+    res.status(500).json({ error: 'Failed to generate AI response', details: error.message });
+  }
+});
+
 // Authentication routes
 app.post('/api/auth/register', async (req, res) => {
   try {
@@ -232,17 +269,23 @@ app.post('/api/confessions', authenticateToken, async (req, res) => {
     // Process confession with AI assistant (async, don't wait)
     setTimeout(async () => {
       try {
-        await aiAssistant.processConfession({
+        console.log(`🤖 Processing confession ${confession.id} with AI assistant...`);
+        const aiResponse = await aiAssistant.processConfession({
           id: confession.id,
           content: confession.content,
           mood: confession.mood,
           location: confession.location,
           tagged_users: confession.taggedUsers
         });
+        if (aiResponse) {
+          console.log(`🤖 AI Assistant responded to confession ${confession.id}`);
+        } else {
+          console.log(`🤖 AI Assistant chose not to respond to confession ${confession.id}`);
+        }
       } catch (error) {
         console.error('AI Assistant processing error:', error);
       }
-    }, Math.random() * 10000 + 2000); // Random delay 2-12 seconds to seem more natural
+    }, Math.random() * 5000 + 1000); // Random delay 1-6 seconds (shorter for testing)
 
     res.status(201).json({
       message: 'Confession posted successfully',

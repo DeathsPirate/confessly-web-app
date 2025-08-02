@@ -5,7 +5,7 @@ const OpenAI = require('openai');
 class AIAssistant {
   constructor() {
     this.name = "Confessor Bot";
-    this.responseRate = 0.3; // 30% chance to respond to any confession
+    this.responseRate = 0.8; // 80% chance to respond to any confession (increased for testing)
     
     // Initialize OpenAI client if API key is available
     this.openai = null;
