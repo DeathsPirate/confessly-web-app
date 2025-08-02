@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: confessly-backend
+    env: node
+    plan: free
+    buildCommand: cd backend && npm ci
+    startCommand: cd backend && npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PORT
+        value: 3001
+      - key: FRONTEND_URL
+        value: https://confessly-frontend.onrender.com
+    
+  - type: web
+    name: confessly-frontend
+    env: static
+    plan: free
+    buildCommand: cd frontend && npm ci && npm run build
+    staticPublishPath: frontend/build
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://confessly-backend.onrender.com/api
