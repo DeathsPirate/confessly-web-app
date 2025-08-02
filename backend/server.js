@@ -87,6 +87,19 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
+// AI Assistant status check
+app.get('/api/ai/status', (req, res) => {
+  const hasOpenAI = !!process.env.OPENAI_API_KEY;
+  res.json({
+    aiEnabled: hasOpenAI,
+    aiType: hasOpenAI ? 'OpenAI GPT-3.5' : 'Rule-based responses',
+    openaiConfigured: hasOpenAI,
+    message: hasOpenAI 
+      ? 'Real AI responses powered by OpenAI' 
+      : 'Using intelligent rule-based responses (set OPENAI_API_KEY for real AI)'
+  });
+});
+
 // Authentication routes
 app.post('/api/auth/register', async (req, res) => {
   try {

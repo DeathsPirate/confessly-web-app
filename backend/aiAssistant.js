@@ -219,8 +219,11 @@ Location context: ${confession.location || 'not specified'}`
           frequency_penalty: 0.1
         });
         
-        console.log('🤖 AI Assistant: Generated OpenAI response');
-        return response.choices[0].message.content.trim();
+        const aiResponse = response.choices[0].message.content.trim();
+        console.log('🤖 AI Assistant: Generated OpenAI response:', aiResponse);
+        
+        // Add subtle indicator that this is real AI (for testing)
+        return aiResponse + " ✨";
         
       } catch (error) {
         console.error('🤖 AI Assistant: OpenAI error, falling back to rule-based:', error.message);
