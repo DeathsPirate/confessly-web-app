@@ -5,3 +5,6 @@ builder = "NIXPACKS"
 startCommand = "npx serve -s build -p $PORT"
 healthcheckPath = "/"
 healthcheckTimeout = 300
+
+[variables]
+NODE_VERSION = "18"
