@@ -38,12 +38,6 @@ const ConfessionCard: React.FC<ConfessionCardProps> = ({ confession, onVoteUpdat
   const [userVote, setUserVote] = useState<'upvote' | 'downvote' | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (showComments && !commentsLoaded) {
-      loadComments();
-    }
-  }, [showComments, commentsLoaded, loadComments]);
-
   const loadComments = useCallback(async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/confessions/${confession.id}/comments`);
@@ -53,6 +47,12 @@ const ConfessionCard: React.FC<ConfessionCardProps> = ({ confession, onVoteUpdat
       console.error('Failed to load comments:', error);
     }
   }, [confession.id]);
+
+  useEffect(() => {
+    if (showComments && !commentsLoaded) {
+      loadComments();
+    }
+  }, [showComments, commentsLoaded, loadComments]);
 
   const handleVote = async (voteType: 'upvote' | 'downvote') => {
     if (!user) return;
